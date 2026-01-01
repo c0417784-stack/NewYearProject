@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>For the Year Ahead ✨</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 🌸 Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins",sans-serif; }
+
+    body {
+      height:100vh;
+      background:radial-gradient(circle at top,#05080f,#05080f,#05080f);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+      color:#e6ecff;
+    }
+
+    canvas {
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
+    }
+
+    .intro-text {
+      position:fixed;
+      bottom:-120px;
+      font-size:42px;
+      letter-spacing:2px;
+      color:#cfe0ff;
+      font-family:"Pacifico",cursive;
+      animation:rollUp 2.8s ease forwards;
+      z-index:3;
+    }
+
+    @keyframes rollUp {
+      to { bottom:60%; opacity:0; }
+    }
+
+    .container {
+      width:90%;
+      max-width:460px;
+      background:rgba(255,255,255,0.07);
+      backdrop-filter:blur(14px);
+      border-radius:18px;
+      padding:40px 28px;
+      box-shadow:0 30px 60px rgba(0,0,0,0.5);
+      text-align:center;
+      z-index:4;
+      display:none;
+      position:relative;
+    }
+
+    .step { display:none; animation:fadeIn 1s ease forwards; }
+    .step.active { display:block; }
+
+    h1 { font-family:"Pacifico",cursive; font-size:28px; margin-bottom:14px; }
+    p { font-size:16px; line-height:1.7; color:#cdd9ff; }
+
+    button {
+      margin-top:34px;
+      padding:10px 26px;
+      border-radius:22px;
+      border:none;
+      cursor:pointer;
+      background:linear-gradient(135deg,#5f9cff,#7acbff);
+      color:#0b132b;
+      font-size:15px;
+      font-weight:500;
+    }
+
+    @keyframes fadeIn {
+      from{opacity:0;transform:translateY(16px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+
+    /* ===== MEMORIES ===== */
+    .memories-gallery {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+      gap:22px;
+      margin-top:24px;
+    }
+
+    .memory-card { cursor:pointer; }
+
+    .memory-card img {
+      width:100%;
+      height:110px;
+      object-fit:cover;
+      border-radius:14px;
+      transition:transform .45s ease, box-shadow .45s ease;
+      opacity:1;
+    }
+
+    @media (hover:hover) {
+      .memories-gallery:hover .memory-card:not(.active):not(:hover) img {
+        opacity:0.45;
+      }
+      .memory-card:hover img {
+        transform:scale(1.9);
+        z-index:50;
+        box-shadow:0 35px 70px rgba(0,0,0,.75);
+      }
+    }
+
+    .memory-card.active img {
+      transform:scale(2);
+      opacity:1 !important;
+      z-index:100;
+      box-shadow:0 40px 80px rgba(0,0,0,.85);
+    }
+
+    .memory-text {
+      font-size:13px;
+      padding:10px 6px;
+      color:#e4ebff;
+      text-align:center;
+    }
+
+    .zoom-overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.6);
+      z-index:90;
+      display:none;
+    }
+    .zoom-overlay.active { display:block; }
+  </style>
+</head>
+
+<body>
+
+<!-- 🎵 BACKGROUND MUSIC -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="music/background.mp3" type="audio/mpeg">
+</audio>
+
+<canvas id="fireworks"></canvas>
+<div class="intro-text">HAPPY NEW YEAR ✨</div>
+<div class="zoom-overlay" id="zoomOverlay"></div>
+
+<div class="container" id="main">
+
+<div class="step active" id="step1">
+  <h1>Hey ✨</h1>
+  <p>
+    Happy New Year 🌌<br>
+    May it bring peace, clarity, and small wins that truly matter.
+  </p>
+  <button onclick="nextStep()">Continue</button>
+</div>
+
+<div class="step" id="step2">
+  <h1>Also, thank you ✨</h1>
+  <p>
+    Thank you for being kind and thoughtful to me.<br>
+    I’m truly grateful to have met you last year,<br>
+    and I look forward to spending more time together in this year .
+  </p>
+  <button onclick="nextStep()">Okay</button>
+</div>
+
+  <div class="step" id="step3">
+    <h1>Last but not least</h1>
+    <p>永遠に、永遠に、永遠が終わるまであなたを愛してる。</p>
+    <button onclick="nextStep()">Continue</button>
+  </div>
+
+  <div class="step" id="step4">
+    <h1>Little Memories ✨</h1>
+    <div class="memories-gallery" id="memoriesGallery"></div>
+    <button onclick="nextStep()">Continue</button>
+  </div>
+
+  <div class="step" id="step5">
+    <h1>For the year ahead 🌌</h1>
+    <p>新しい一年の始まりも、これから先の思い出も、全部君と作りたい
+      <br>君はずるいね、こんなに惹かれるなんて。
+      <br>もし願いが叶うなら、ずっと君と一緒がいい。
+      <br>君は私の小さな幸せ。
+      <br>声だけでもいいから、君と繋がりたい。
+    </p>
+  </div>
+
+</div>
+
+<script>
+/* 🎵 MUSIC — starts AFTER intro, on first user interaction */
+const bgMusic = document.getElementById("bgMusic");
+bgMusic.volume = 0.35;
+let musicUnlocked = false;
+
+function unlockMusic(){
+  if(!musicUnlocked){
+    bgMusic.play().catch(()=>{});
+    musicUnlocked = true;
+    document.removeEventListener("click", unlockMusic);
+  }
+}
+
+/* INTRO */
+setTimeout(()=>{
+  document.querySelector(".intro-text").style.display="none";
+  document.getElementById("main").style.display="block";
+  document.addEventListener("click", unlockMusic, { once:true });
+},2800);
+
+/* UI FLOW */
+let current=1;
+function nextStep(){
+  document.getElementById(`step${current}`).classList.remove("active");
+  current++;
+  document.getElementById(`step${current}`).classList.add("active");
+}
+
+/* MEMORIES */
+const memories=[
+  {img:"images/mem1.png",text:"The night the sky celebrated us."},
+  {img:"images/mem2.png",text:"Peace felt like this moment."},
+  {img:"images/mem3.png",text:"Blooming memories with you."},
+  {img:"images/mem4.png",text:"This is when peace felt real."}
+];
+
+const gallery=document.getElementById("memoriesGallery");
+const overlay=document.getElementById("zoomOverlay");
+
+memories.forEach(m=>{
+  const card=document.createElement("div");
+  card.className="memory-card";
+  card.innerHTML=`<img src="${m.img}"><div class="memory-text">${m.text}</div>`;
+  card.onclick=()=>{
+    document.querySelectorAll(".memory-card").forEach(c=>c.classList.remove("active"));
+    card.classList.add("active");
+    overlay.classList.add("active");
+  };
+  gallery.appendChild(card);
+});
+
+overlay.onclick=()=>{
+  document.querySelectorAll(".memory-card").forEach(c=>c.classList.remove("active"));
+  overlay.classList.remove("active");
+};
+
+/* ================= FIREWORKS (RESTORED, UNCHANGED) ================= */
+const canvas=document.getElementById("fireworks");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+const rockets=[],sparks=[];
+const gravity=0.07,friction=0.975;
+
+class Rocket{
+  constructor(){
+    this.x=Math.random()*canvas.width;
+    this.y=canvas.height;
+    this.vy=-(9+Math.random()*3);
+    this.color=`hsl(${Math.random()*360},90%,65%)`;
+    this.targetY=canvas.height*(0.25+Math.random()*0.25);
+    this.exploded=false;
+  }
+  update(){
+    this.y+=this.vy;
+    this.vy+=gravity*0.25;
+    ctx.strokeStyle=this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.x,this.y+14);
+    ctx.lineTo(this.x,this.y);
+    ctx.stroke();
+    if(this.y<=this.targetY&&!this.exploded){
+      this.exploded=true;
+      explodeRandom(this.x,this.y,this.color);
+    }
+  }
+}
+
+class Spark{
+  constructor(x,y,vx,vy,color){
+    this.x=x;this.y=y;this.vx=vx;this.vy=vy;
+    this.life=1;this.color=color;this.px=x;this.py=y;
+  }
+  update(){
+    this.px=this.x;this.py=this.y;
+    this.x+=this.vx;this.y+=this.vy;
+    this.vy+=gravity;this.vx*=friction;this.vy*=friction;
+    this.life-=0.005;
+  }
+  draw(){
+    ctx.globalAlpha=Math.max(this.life,0);
+    ctx.strokeStyle=this.color;
+    ctx.beginPath();
+    ctx.moveTo(this.px,this.py);
+    ctx.lineTo(this.x,this.y);
+    ctx.stroke();
+  }
+}
+
+function explodeRandom(x,y,color){
+  Math.random()<0.15 ? explodeHeart(x,y) : explodeNormal(x,y,color);
+}
+
+function explodeNormal(x,y,color){
+  for(let i=0;i<1000;i++){
+    const a=Math.random()*Math.PI*2;
+    const s=Math.random()*7+4;
+    sparks.push(new Spark(x,y,Math.cos(a)*s,Math.sin(a)*s,color));
+  }
+}
+
+function explodeHeart(x,y){
+  for(let i=0;i<260;i++){
+    const t=Math.random()*Math.PI*2;
+    const px=16*Math.pow(Math.sin(t),3);
+    const py=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+    sparks.push(new Spark(x,y,px*0.55,-py*0.55,"hsl(340,85%,65%)"));
+  }
+}
+
+function randomLaunch(){
+  rockets.push(new Rocket());
+  setTimeout(randomLaunch,Math.random()*20+290);
+}
+randomLaunch();
+
+function animate(){
+  requestAnimationFrame(animate);
+  ctx.fillStyle="rgba(0,0,0,0.3)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  rockets.forEach((r,i)=>{r.update();if(r.exploded)rockets.splice(i,1);});
+  sparks.forEach((s,i)=>{s.update();s.draw();if(s.life<=0)sparks.splice(i,1);});
+}
+animate();
+</script>
+
+</body>
+</html>
